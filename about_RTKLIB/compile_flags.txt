@@ -1,2 +1,2 @@
 -I/home/kwq/codeLite_pro/miscWorkspace/about_RTKLIB
--I/home/kwq/codeLite_pro/miscWorkspace/about_RTKLIB/inc
+-I/home/kwq/codeLite_pro/miscWorkspace/lib_sv_rs_dopp/inc

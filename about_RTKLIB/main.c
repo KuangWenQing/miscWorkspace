@@ -1,10 +1,10 @@
 #include <stdio.h>
 
-#include "myfunc.h"
+#include "openAPI.h"
 
 int main(int argc, char **argv)
 {
-	gtime_t time = {1112399999, 0.91728716015407952};
+	time_t time = 1112399999 % 604800 + 0.91728716015407952;
 
 	eph_t test_eph = {
 		3,
@@ -15,9 +15,8 @@ int main(int argc, char **argv)
 		1316,
 		1,
 		0,
-		{1112400000, 0},
-		{1112400000, 0},
-		{1112392818, 0},
+		1112400000%604800,
+		1112400000%604800,
 		26560940.634528071,
 		0.00673579110298,
 		0.92743379988899999,
@@ -46,10 +45,17 @@ int main(int argc, char **argv)
 	
 	double rs[6] = {0};
 	double dopp = 0;
+	double el=0.0;
 
-	
 	satellite_pos_vel_dopp(time, &test_eph, usrpos, rs, &dopp);
 	
+	el = satellite_elevation(usrpos, rs);
+	
+	
+	TYP_F32 kk = SplitExtF64(dopp);
+	
+	printf("%.10f, %.10f\r\n", dopp - (double)kk.fDat - (double)kk.fErr, dopp - kk.fDat - kk.fErr);
+	printf("dopp = %lf,  el = %lf\n", dopp, el);
     printf("Hello World \n");
     return 0;
 }

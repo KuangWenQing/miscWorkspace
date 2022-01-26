@@ -2,19 +2,16 @@
 <CodeLite_Workspace Name="miscWorkspace" Database="" Version="10.0.0">
   <Project Name="about_RTKLIB" Path="about_RTKLIB/about_RTKLIB.project" Active="No"/>
   <Project Name="lib_sv_rs_dopp" Path="lib_sv_rs_dopp/lib_sv_rs_dopp.project" Active="Yes"/>
-  <Project Name="static_lib_sv_rs_dopp" Path="static_lib_sv_rs_dopp/static_lib_sv_rs_dopp.project" Active="No"/>
   <BuildMatrix>
     <WorkspaceConfiguration Name="Debug" Selected="yes">
       <Environment/>
       <Project Name="about_RTKLIB" ConfigName="Debug"/>
       <Project Name="lib_sv_rs_dopp" ConfigName="Debug"/>
-      <Project Name="static_lib_sv_rs_dopp" ConfigName="Debug"/>
     </WorkspaceConfiguration>
     <WorkspaceConfiguration Name="Release" Selected="yes">
       <Environment/>
       <Project Name="about_RTKLIB" ConfigName="Release"/>
       <Project Name="lib_sv_rs_dopp" ConfigName="Release"/>
-      <Project Name="static_lib_sv_rs_dopp" ConfigName="Release"/>
     </WorkspaceConfiguration>
   </BuildMatrix>
 </CodeLite_Workspace>

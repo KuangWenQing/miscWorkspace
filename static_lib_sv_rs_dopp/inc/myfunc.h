@@ -190,7 +190,7 @@ double calc_doppler_based_pv(const PSTU_COOR_XYZ satVel, const PSTU_COOR_XYZ sat
  *          double *usrpos     I   user position
  *          double *rs         O   sat position and velocity (ecef)
  *                                 {x,y,z,vx,vy,vz} (m|m/s)
- * 			double *dopp       O   satellite DOPP (Hz)
+ *          double *dopp       O   satellite DOPP (Hz)
  * 
  * return : none
  * *************************************************/

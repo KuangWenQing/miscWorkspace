@@ -11,6 +11,7 @@
     <File Name="src/myfunc.c"/>
   </VirtualDirectory>
   <VirtualDirectory Name="include">
+    <File Name="inc/openAPI.h"/>
     <File Name="inc/myfunc.h"/>
   </VirtualDirectory>
   <Settings Type="Dynamic Library">
@@ -103,4 +104,6 @@
       </Completion>
     </Configuration>
   </Settings>
+  <Dependencies Name="Debug"/>
+  <Dependencies Name="Release"/>
 </CodeLite_Project>

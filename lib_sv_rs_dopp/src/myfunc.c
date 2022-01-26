@@ -2,16 +2,16 @@
 
 /* get satellite position , velocity and DOPP
  * 
- * args   : gtime_t time       I   time (gpst)
+ * args   : time_t time        I   second of week (s)
  *          eph_t   *eph       I   broadcast ephemeris
- *          double *usrpos     I   user position
+ *          double *usrpos     I   user position {lat,lon,high} (rad | m)
  *          double *rs         O   sat position and velocity (ecef)
  *                                 {x,y,z,vx,vy,vz} (m|m/s)
- * 			double *dopp       O   satellite DOPP (Hz)
+ *          double *dopp       O   satellite DOPP (Hz)
  * 
  * return : none
  * *************************************************/
-void satellite_pos_vel_dopp(gtime_t time, const eph_t *eph, const double *usrpos, double *rs, double *dopp)
+void satellite_pos_vel_dopp(time_t time, const eph_t *eph, const double *usrpos, double *rs, double *dopp)
 {
 	STU_COOR_XYZ sat_vel, sat_pos, xyz;
 	int i;
@@ -79,21 +79,26 @@ double cal_norm_3dim(const PSTU_COOR_XYZ V)
 	return sqrt(pow(V->tX, 2) + pow(V->tY, 2) + pow(V->tZ, 2));
 }
 
-gtime_t timeadd(gtime_t t, double sec)
+double timeadd(time_t t, double sec)
 {
-    double tt;
-    
-    t.sec+=sec; tt=floor(t.sec); t.time+=(int)tt; t.sec-=tt;
-    return t;
+	time_t tmp;
+	tmp = t + sec;
+	
+	if (tmp < -302400)
+		tmp += 604800;
+	else if(tmp > 302400)
+		tmp -= 604800;
+	
+    return tmp;
 }
 
-void eph2pos(gtime_t time, const eph_t *eph, double *rs)
+void eph2pos(time_t time, const eph_t *eph, double *rs)
 {
     double tk,M,E,Ek,sinE,cosE,u,r,i,O,sin2u,cos2u,x,y,sinO,cosO,cosi,mu,omge;
     double xg,yg,zg,sino,coso;
     int n,sys,prn;
     
-    printf("eph2pos : time=%s sat=%2d\n",time_str(time,3),eph->sat);
+//    printf("eph2pos : time=%s sat=%2d\n",time_str(time,3),eph->sat);
     
     if (eph->A<=0.0) {
         rs[0]=rs[1]=rs[2]=0.0;
@@ -149,46 +154,18 @@ void eph2pos(gtime_t time, const eph_t *eph, double *rs)
     }
 }
 
-void time2epoch(gtime_t t, double *ep)
+time_t timediff(time_t t1, time_t t2)
 {
-    const int mday[]={ /* # of days in a month */
-        31,28,31,30,31,30,31,31,30,31,30,31,31,28,31,30,31,30,31,31,30,31,30,31,
-        31,29,31,30,31,30,31,31,30,31,30,31,31,28,31,30,31,30,31,31,30,31,30,31
-    };
-    int days,sec,mon,day;
-    
-    /* leap year if year%4==0 in 1901-2099 */
-    days=(int)(t.time/86400);
-    sec=(int)(t.time-(time_t)days*86400);
-    for (day=days%1461,mon=0;mon<48;mon++) {
-        if (day>=mday[mon]) day-=mday[mon]; else break;
-    }
-    ep[0]=1970+days/1461*4+mon/12; ep[1]=mon%12+1; ep[2]=day+1;
-    ep[3]=sec/3600; ep[4]=sec%3600/60; ep[5]=sec%60+t.sec;
-}
-
-void time2str(gtime_t t, char *s, int n)
-{
-    double ep[6];
-    
-    if (n<0) n=0; else if (n>12) n=12;
-    if (1.0-t.sec<0.5/pow(10.0,n)) {t.time++; t.sec=0.0;};
-    time2epoch(t,ep);
-    sprintf(s,"%04.0f/%02.0f/%02.0f %02.0f:%02.0f:%0*.*f",ep[0],ep[1],ep[2],
-            ep[3],ep[4],n<=0?2:n+3,n<=0?0:n,ep[5]);
-}
-
-char *time_str(gtime_t t, int n)
-{
-    static char buff[64];
-    time2str(t,buff,n);
-    return buff;
-}
-
-
-double timediff(gtime_t t1, gtime_t t2)
-{
-    return difftime(t1.time,t2.time)+t1.sec-t2.sec;
+//    return difftime(t1.time,t2.time)+t1.sec-t2.sec;
+	time_t tmp;
+	tmp = t1 - t2;
+	
+	if (tmp < -302400)
+		tmp += 604800;
+	else if(tmp > 302400)
+		tmp -= 604800;
+	
+    return tmp;
 }
 
 
@@ -261,6 +238,80 @@ extern void pos2ecef(const double *pos, double *r)
 }
 
 
+/* multiply matrix -----------------------------------------------------------*/
+void matmul(const char *tr, int n, int k, int m, double alpha,
+                   const double *A, const double *B, double beta, double *C)
+{
+    double d;
+    int i,j,x,f=tr[0]=='N'?(tr[1]=='N'?1:2):(tr[1]=='N'?3:4);
+    
+    for (i=0;i<n;i++) for (j=0;j<k;j++) {
+        d=0.0;
+        switch (f) {
+            case 1: for (x=0;x<m;x++) d+=A[i+x*n]*B[x+j*m]; break;
+            case 2: for (x=0;x<m;x++) d+=A[i+x*n]*B[j+x*k]; break;
+            case 3: for (x=0;x<m;x++) d+=A[x+i*m]*B[x+j*m]; break;
+            case 4: for (x=0;x<m;x++) d+=A[x+i*m]*B[j+x*k]; break;
+        }
+        if (beta==0.0) C[i+j*n]=alpha*d; else C[i+j*n]=alpha*d+beta*C[i+j*n];
+    }
+}
+
+void xyz2enu(const double *pos, double *E)
+{
+    double sinp=sin(pos[0]),cosp=cos(pos[0]),sinl=sin(pos[1]),cosl=cos(pos[1]);
+    
+    E[0]=-sinl;      E[3]=cosl;       E[6]=0.0;
+    E[1]=-sinp*cosl; E[4]=-sinp*sinl; E[7]=cosp;
+    E[2]=cosp*cosl;  E[5]=cosp*sinl;  E[8]=sinp;
+}
+
+void ecef2enu(const double *pos, const double *r, double *e)
+{
+    double E[9];
+    
+    xyz2enu(pos,E);
+    matmul("NN",3,1,3,1.0,E,r,0.0,e);
+}
+
+double dot(const double *a, const double *b, int n)
+{
+    double c=0.0;
+    
+    while (--n>=0) c+=a[n]*b[n];
+    return c;
+}
+
+/* euclid norm -----------------------------------------------------------------
+* euclid norm of vector
+* args   : double *a        I   vector a (n x 1)
+*          int    n         I   size of vector a
+* return : || a ||
+*-----------------------------------------------------------------------------*/
+extern double norm(const double *a, int n)
+{
+    return sqrt(dot(a,a,n));
+}
+
+/* geometric distance ----------------------------------------------------------
+* compute geometric distance and receiver-to-satellite unit vector
+* args   : double *rs       I   satellilte position (ecef at transmission) (m)
+*          double *rr       I   receiver position (ecef at reception) (m)
+*          double *e        O   line-of-sight vector (ecef)
+* return : geometric distance (m) (0>:error/no satellite position)
+* notes  : distance includes sagnac effect correction
+*-----------------------------------------------------------------------------*/
+extern double geodist(const double *rs, const double *rr, double *e)
+{
+    double r;
+    int i;
+    
+    if (norm(rs,3)<RE_WGS84) return -1.0;
+    for (i=0;i<3;i++) e[i]=rs[i]-rr[i];
+    r=norm(e,3);
+    for (i=0;i<3;i++) e[i]/=r;
+    return r+OMGE*(rs[0]*rr[1]-rs[1]*rr[0])/CLIGHT;
+}
 
 /* satellite azimuth/elevation angle -------------------------------------------
 * compute satellite azimuth/elevation angle
@@ -270,52 +321,47 @@ extern void pos2ecef(const double *pos, double *r)
 *                               (0.0<=azel[0]<2*pi,-pi/2<=azel[1]<=pi/2)
 * return : elevation angle (rad)
 *-----------------------------------------------------------------------------*/
-//double satazel(const double *pos, const double *e, double *azel)
-//{
-//    double az=0.0,el=PI/2.0,enu[3];
-//    
-//    if (pos[2]>-RE_WGS84) {
-//        ecef2enu(pos,e,enu);
-//        az=dot(enu,enu,2)<1E-12?0.0:atan2(enu[0],enu[1]);
-//        if (az<0.0) az+=2*PI;
-//        el=asin(enu[2]);
-//    }
-//    if (azel) {azel[0]=az; azel[1]=el;}
-//    return el;
-//}
-//
-//
-//void matmul(const char *tr, int n, int k, int m, double alpha,
-//                   const double *A, const double *B, double beta, double *C)
-//{
-//    int lda=tr[0]=='T'?m:n,ldb=tr[1]=='T'?k:m;
-//    
-//    dgemm_((char *)tr,(char *)tr+1,&n,&k,&m,&alpha,(double *)A,&lda,(double *)B,
-//           &ldb,&beta,C,&n);
-//}
-//
-//void xyz2enu(const double *pos, double *E)
-//{
-//    double sinp=sin(pos[0]),cosp=cos(pos[0]),sinl=sin(pos[1]),cosl=cos(pos[1]);
-//    
-//    E[0]=-sinl;      E[3]=cosl;       E[6]=0.0;
-//    E[1]=-sinp*cosl; E[4]=-sinp*sinl; E[7]=cosp;
-//    E[2]=cosp*cosl;  E[5]=cosp*sinl;  E[8]=sinp;
-//}
-//
-//void ecef2enu(const double *pos, const double *r, double *e)
-//{
-//    double E[9];
-//    
-//    xyz2enu(pos,E);
-//    matmul("NN",3,1,3,1.0,E,r,0.0,e);
-//}
-//
-//
-double dot(const double *a, const double *b, int n)
+double satazel(const double *pos, const double *e, double *azel)
 {
-    double c=0.0;
+    double az=0.0,el=PI/2.0,enu[3];
     
-    while (--n>=0) c+=a[n]*b[n];
-    return c;
+    if (pos[2]>-RE_WGS84) {
+        ecef2enu(pos,e,enu);
+        az=dot(enu,enu,2)<1E-12?0.0:atan2(enu[0],enu[1]);
+        if (az<0.0) az+=2*PI;
+        el=asin(enu[2]);
+    }
+    if (azel) {azel[0]=az; azel[1]=el;}
+    return el;
+}
+
+
+/* satellite azimuth/elevation angle -------------------------------------------
+* compute satellite elevation angle
+* args   : double *usrpos   I   user position, geodetic position {lat,lon,h} (rad,m)
+*          double *satpos   I   satellite position, 
+* 
+* return : elevation angle (rad)  -pi/2<= el <=pi/2  is right
+* ----------------------------------------------*/
+double satellite_elevation(const double *usrpos, const double* satpos)
+{
+	double e[3], rr[3], azel[2], r;
+	
+	pos2ecef(usrpos, rr);
+	
+	/* geometric distance/azimuth/elevation angle */
+	if ((r=geodist(satpos, rr, e))<=0.0)
+		return PI;
+    return satazel(usrpos, e, azel);
+}
+
+
+TYP_F32 SplitExtF64(double dData)
+{
+	TYP_F32 tRes;
+	double dTmp = dData * 0x20000001;
+	
+	tRes.fDat = dTmp - (dTmp - dData);
+	tRes.fErr = dData - tRes.fDat;
+	return tRes;
 }

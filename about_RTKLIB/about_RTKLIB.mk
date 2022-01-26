@@ -13,7 +13,7 @@ CurrentFileName        :=
 CurrentFilePath        :=
 CurrentFileFullPath    :=
 User                   :=
-Date                   :=25/01/22
+Date                   :=26/01/22
 CodeLitePath           :=/home/kwq/.codelite
 LinkerName             :=gcc
 SharedObjectLinkerName :=gcc -shared -fPIC
@@ -36,7 +36,7 @@ ObjectsFileList        :="about_RTKLIB.txt"
 PCHCompileFlags        :=
 MakeDirCommand         :=mkdir -p
 LinkOptions            :=  -lm
-IncludePath            :=  $(IncludeSwitch). $(IncludeSwitch). $(IncludeSwitch)inc 
+IncludePath            :=  $(IncludeSwitch). $(IncludeSwitch). $(IncludeSwitch)../lib_sv_rs_dopp/inc 
 IncludePCH             := 
 RcIncludePath          := 
 Libs                   := 
@@ -60,7 +60,7 @@ AS       := as
 ## User defined environment variables
 ##
 CodeLiteDir:=/usr/share/codelite
-Objects0=$(IntermediateDirectory)/src_myfunc.c$(ObjectSuffix) $(IntermediateDirectory)/main.c$(ObjectSuffix) 
+Objects0=$(IntermediateDirectory)/up_lib_sv_rs_dopp_src_myfunc.c$(ObjectSuffix) $(IntermediateDirectory)/main.c$(ObjectSuffix) 
 
 
 
@@ -91,13 +91,13 @@ PreBuild:
 ##
 ## Objects
 ##
-$(IntermediateDirectory)/src_myfunc.c$(ObjectSuffix): src/myfunc.c $(IntermediateDirectory)/src_myfunc.c$(DependSuffix)
-	$(CC) $(SourceSwitch) "/home/kwq/codeLite_pro/miscWorkspace/about_RTKLIB/src/myfunc.c" $(CFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/src_myfunc.c$(ObjectSuffix) $(IncludePath)
-$(IntermediateDirectory)/src_myfunc.c$(DependSuffix): src/myfunc.c
-	@$(CC) $(CFLAGS) $(IncludePath) -MG -MP -MT$(IntermediateDirectory)/src_myfunc.c$(ObjectSuffix) -MF$(IntermediateDirectory)/src_myfunc.c$(DependSuffix) -MM src/myfunc.c
+$(IntermediateDirectory)/up_lib_sv_rs_dopp_src_myfunc.c$(ObjectSuffix): ../lib_sv_rs_dopp/src/myfunc.c $(IntermediateDirectory)/up_lib_sv_rs_dopp_src_myfunc.c$(DependSuffix)
+	$(CC) $(SourceSwitch) "/home/kwq/codeLite_pro/miscWorkspace/lib_sv_rs_dopp/src/myfunc.c" $(CFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/up_lib_sv_rs_dopp_src_myfunc.c$(ObjectSuffix) $(IncludePath)
+$(IntermediateDirectory)/up_lib_sv_rs_dopp_src_myfunc.c$(DependSuffix): ../lib_sv_rs_dopp/src/myfunc.c
+	@$(CC) $(CFLAGS) $(IncludePath) -MG -MP -MT$(IntermediateDirectory)/up_lib_sv_rs_dopp_src_myfunc.c$(ObjectSuffix) -MF$(IntermediateDirectory)/up_lib_sv_rs_dopp_src_myfunc.c$(DependSuffix) -MM ../lib_sv_rs_dopp/src/myfunc.c
 
-$(IntermediateDirectory)/src_myfunc.c$(PreprocessSuffix): src/myfunc.c
-	$(CC) $(CFLAGS) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/src_myfunc.c$(PreprocessSuffix) src/myfunc.c
+$(IntermediateDirectory)/up_lib_sv_rs_dopp_src_myfunc.c$(PreprocessSuffix): ../lib_sv_rs_dopp/src/myfunc.c
+	$(CC) $(CFLAGS) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/up_lib_sv_rs_dopp_src_myfunc.c$(PreprocessSuffix) ../lib_sv_rs_dopp/src/myfunc.c
 
 $(IntermediateDirectory)/main.c$(ObjectSuffix): main.c $(IntermediateDirectory)/main.c$(DependSuffix)
 	$(CC) $(SourceSwitch) "/home/kwq/codeLite_pro/miscWorkspace/about_RTKLIB/main.c" $(CFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/main.c$(ObjectSuffix) $(IncludePath)

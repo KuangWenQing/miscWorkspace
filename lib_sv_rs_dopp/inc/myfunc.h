@@ -1,11 +1,12 @@
 #ifndef __MYFUNC_H__
 #define __MYFUNC_H__
 #include <stdio.h>
-#include <time.h>
+//#include <time.h>
 #include <math.h>
 
 
 #define PI       3.1415926535897932  /* pi */
+#define CLIGHT      299792458.0         /* speed of light (m/s) */
 
 #define RE_GLO   6378136.0        /* radius of earth (m)            ref [2] */
 #define MU_GPS   3.9860050E14     /* gravitational constant         ref [1] */
@@ -126,15 +127,19 @@
 #define MAXSAT      (NSATGPS+NSATGLO+NSATGAL+NSATQZS+NSATCMP+NSATSBS+NSATLEO)
                                         /* max satellite number (1 to MAXSAT) */
 
-extern void dgemm_(char *, char *, int *, int *, int *, double *, double *, int *, double *, int *, double *, double *, int *);
 
-typedef long time_t;
+typedef double  time_t;
 
-typedef struct {        /* time struct */
-    time_t time;        /* time (s) expressed by standard time_t */
-    double sec;         /* fraction of second under 1 s */
-} gtime_t;
+//typedef struct {        /* time struct */
+//    time_t time;        /* time (s) expressed by standard time_t */
+//    double sec;         /* fraction of second under 1 s */
+//} gtime_t;
 
+
+typedef struct{
+	float fDat;
+	float fErr;
+}TYP_F32, *PTYP_F32;
 
 typedef struct{
     double tX;
@@ -151,7 +156,7 @@ typedef struct {        /* GPS/QZS/GAL broadcast ephemeris type */
     int week;           /* GPS/QZS: gps week, GAL: galileo week */
     int code;           /* GPS/QZS: code on L2, GAL/CMP: data sources */
     int flag;           /* GPS/QZS: L2 P data flag, CMP: nav type */
-    gtime_t toe,toc,ttr; /* Toe,Toc,T_trans */
+    time_t toe,toc; /* Toe,Toc,T_trans */
                         /* SV orbit parameters */
     double A,e,i0,OMG0,omg,M0,deln,OMGd,idot;
     double crc,crs,cuc,cus,cic,cis;
@@ -168,11 +173,9 @@ typedef struct {        /* GPS/QZS/GAL broadcast ephemeris type */
 
 int  satsys  (int sat, int *prn);
 
-void  time2epoch(gtime_t t, double *ep);
-void  time2str(gtime_t t, char *str, int n);
-char *time_str(gtime_t t, int n);
-double  timediff (gtime_t t1, gtime_t t2);
-gtime_t timeadd(gtime_t t, double sec);
+
+time_t  timediff (time_t t1, time_t t2);
+time_t timeadd(time_t t, time_t sec);
 
 double dot(const double *a, const double *b, int n);
 void matmul(const char *tr, int n, int k, int m, double alpha,
@@ -180,21 +183,9 @@ void matmul(const char *tr, int n, int k, int m, double alpha,
 void xyz2enu(const double *pos, double *E);
 void ecef2enu(const double *pos, const double *r, double *e);
 
-void eph2pos(gtime_t time, const eph_t *eph, double *rs);
+void eph2pos(time_t time, const eph_t *eph, double *rs);
 double calc_doppler_based_pv(const PSTU_COOR_XYZ satVel, const PSTU_COOR_XYZ satPos, const PSTU_COOR_XYZ usrPos);
 
-/* get satellite position , velocity and DOPP
- * 
- * args   : gtime_t time       I   time (gpst)
- *          eph_t   *eph       I   broadcast ephemeris
- *          double *usrpos     I   user position
- *          double *rs         O   sat position and velocity (ecef)
- *                                 {x,y,z,vx,vy,vz} (m|m/s)
- * 			double *dopp       O   satellite DOPP (Hz)
- * 
- * return : none
- * *************************************************/
-void satellite_pos_vel_dopp(gtime_t time, const eph_t *eph, const double *usrpos, double *rs, double *dopp);
 
 double cal_range_3dim(const PSTU_COOR_XYZ Pos1, const PSTU_COOR_XYZ Pos2);
 double cal_norm_3dim(const PSTU_COOR_XYZ V);
