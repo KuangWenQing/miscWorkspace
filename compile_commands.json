@@ -1,0 +1,29 @@
+[{
+  "file": "/home/kwq/codeLite_pro/miscWorkspace/static_lib_sv_rs_dopp/inc/myfunc.h",
+  "directory": "/home/kwq/codeLite_pro/miscWorkspace/static_lib_sv_rs_dopp",
+  "command": "clang  -c /home/kwq/codeLite_pro/miscWorkspace/static_lib_sv_rs_dopp/inc/myfunc.h -o /home/kwq/codeLite_pro/miscWorkspace/static_lib_sv_rs_dopp/inc/myfunc.h.o  -I. -I. -Iinc  -g"
+ }, {
+  "file": "/home/kwq/codeLite_pro/miscWorkspace/static_lib_sv_rs_dopp/src/myfunc.c",
+  "directory": "/home/kwq/codeLite_pro/miscWorkspace/static_lib_sv_rs_dopp",
+  "command": "clang  -c /home/kwq/codeLite_pro/miscWorkspace/static_lib_sv_rs_dopp/src/myfunc.c -o /home/kwq/codeLite_pro/miscWorkspace/static_lib_sv_rs_dopp/src/myfunc.c.o  -I. -I. -Iinc  -g"
+ }, {
+  "file": "/home/kwq/codeLite_pro/miscWorkspace/lib_sv_rs_dopp/inc/myfunc.h",
+  "directory": "/home/kwq/codeLite_pro/miscWorkspace/lib_sv_rs_dopp",
+  "command": "clang  -c /home/kwq/codeLite_pro/miscWorkspace/lib_sv_rs_dopp/inc/myfunc.h -o /home/kwq/codeLite_pro/miscWorkspace/lib_sv_rs_dopp/inc/myfunc.h.o  -I. -I. -Iinc  -g"
+ }, {
+  "file": "/home/kwq/codeLite_pro/miscWorkspace/lib_sv_rs_dopp/src/myfunc.c",
+  "directory": "/home/kwq/codeLite_pro/miscWorkspace/lib_sv_rs_dopp",
+  "command": "clang  -c /home/kwq/codeLite_pro/miscWorkspace/lib_sv_rs_dopp/src/myfunc.c -o /home/kwq/codeLite_pro/miscWorkspace/lib_sv_rs_dopp/src/myfunc.c.o  -I. -I. -Iinc  -g  -fPIC"
+ }, {
+  "file": "/home/kwq/codeLite_pro/miscWorkspace/about_RTKLIB/main.c",
+  "directory": "/home/kwq/codeLite_pro/miscWorkspace/about_RTKLIB",
+  "command": "clang  -c /home/kwq/codeLite_pro/miscWorkspace/about_RTKLIB/main.c -o /home/kwq/codeLite_pro/miscWorkspace/about_RTKLIB/main.c.o  -I. -I. -Iinc  -g  -O0  -Wall"
+ }, {
+  "file": "/home/kwq/codeLite_pro/miscWorkspace/about_RTKLIB/src/myfunc.c",
+  "directory": "/home/kwq/codeLite_pro/miscWorkspace/about_RTKLIB",
+  "command": "clang  -c /home/kwq/codeLite_pro/miscWorkspace/about_RTKLIB/src/myfunc.c -o /home/kwq/codeLite_pro/miscWorkspace/about_RTKLIB/src/myfunc.c.o  -I. -I. -Iinc  -g  -O0  -Wall"
+ }, {
+  "file": "/home/kwq/codeLite_pro/miscWorkspace/about_RTKLIB/inc/myfunc.h",
+  "directory": "/home/kwq/codeLite_pro/miscWorkspace/about_RTKLIB",
+  "command": "clang  -c /home/kwq/codeLite_pro/miscWorkspace/about_RTKLIB/inc/myfunc.h -o /home/kwq/codeLite_pro/miscWorkspace/about_RTKLIB/inc/myfunc.h.o  -I. -I. -Iinc  -g  -O0  -Wall"
+ }]

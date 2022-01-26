@@ -1,0 +1,2 @@
+-I/home/kwq/codeLite_pro/miscWorkspace/about_RTKLIB
+-I/home/kwq/codeLite_pro/miscWorkspace/about_RTKLIB/inc

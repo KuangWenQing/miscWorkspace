@@ -1,0 +1,2 @@
+-I/home/kwq/codeLite_pro/miscWorkspace/static_lib_sv_rs_dopp
+-I/home/kwq/codeLite_pro/miscWorkspace/static_lib_sv_rs_dopp/inc
