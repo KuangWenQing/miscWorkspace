@@ -150,25 +150,40 @@ typedef struct{
 
 typedef struct {        /* GPS/QZS/GAL broadcast ephemeris type */
     int sat;            /* satellite number */
-    int iode,iodc;      /* IODE,IODC */
-    int sva;            /* SV accuracy (URA index) */
-    int svh;            /* SV health (0:ok) */
+//    int iode,iodc;      /* IODE,IODC */
+//    int sva;            /* SV accuracy (URA index) */
+//    int svh;            /* SV health (0:ok) */
     int week;           /* GPS/QZS: gps week, GAL: galileo week */
-    int code;           /* GPS/QZS: code on L2, GAL/CMP: data sources */
-    int flag;           /* GPS/QZS: L2 P data flag, CMP: nav type */
-    time_t toe,toc; /* Toe,Toc,T_trans */
+//    int code;           /* GPS/QZS: code on L2, GAL/CMP: data sources */
+//    int flag;           /* GPS/QZS: L2 P data flag, CMP: nav type */
+//	time_t toe;		/* Toe */	
+    time_t toc; 	/* Toc : the value read from file */
+//	time_t ttr;		/* T_trans */
                         /* SV orbit parameters */
     double A,e,i0,OMG0,omg,M0,deln,OMGd,idot;
     double crc,crs,cuc,cus,cic,cis;
     double toes;        /* Toe (s) in week */
-    double fit;         /* fit interval (h) */
-    double f0,f1,f2;    /* SV clock parameters (af0,af1,af2) */
-    double tgd[4];      /* group delay parameters */
+//    double fit;         /* fit interval (h) */
+//    double f0,f1,f2;    /* SV clock parameters (af0,af1,af2) */
+//    double tgd[4];      /* group delay parameters */
                         /* GPS/QZS:tgd[0]=TGD */
                         /* GAL    :tgd[0]=BGD E5a/E1,tgd[1]=BGD E5b/E1 */
                         /* CMP    :tgd[0]=BGD1,tgd[1]=BGD2 */
-    double Adot,ndot;   /* Adot,ndot for CNAV */
+//    double Adot,ndot;   /* Adot,ndot for CNAV */
 } eph_t;
+
+
+typedef struct {        /* almanac type */
+    int sat;            /* satellite number */
+//    int svh;            /* sv health (0:ok) */
+//    int svconf;         /* as and sv config */
+//    int week;           /* GPS/QZS: gps week, GAL: galileo week */
+    time_t toa;        /* Toa */
+                        /* SV orbit parameters */
+    double A,e,i0,OMG0,omg,M0,OMGd;
+    double toas;        /* Toa (s) in week */
+//    double f0,f1;       /* SV clock parameters (af0,af1) */
+} alm_t;
 
 
 int  satsys  (int sat, int *prn);
@@ -176,6 +191,10 @@ int  satsys  (int sat, int *prn);
 
 time_t  timediff (time_t t1, time_t t2);
 time_t timeadd(time_t t, time_t sec);
+time_t epoch2time(const double *ep);
+time_t gpst2time(int week, double sec);
+time_t adjweek(time_t t);//, time_t t0);
+
 
 double dot(const double *a, const double *b, int n);
 void matmul(const char *tr, int n, int k, int m, double alpha,
@@ -183,7 +202,9 @@ void matmul(const char *tr, int n, int k, int m, double alpha,
 void xyz2enu(const double *pos, double *E);
 void ecef2enu(const double *pos, const double *r, double *e);
 
-void eph2pos(time_t time, const eph_t *eph, double *rs);
+
+void alm2pos(time_t time, const alm_t *alm, double *rs);
+void eph2pos(time_t time, const eph_t *eph, double toe, double *rs);
 double calc_doppler_based_pv(const PSTU_COOR_XYZ satVel, const PSTU_COOR_XYZ satPos, const PSTU_COOR_XYZ usrPos);
 
 

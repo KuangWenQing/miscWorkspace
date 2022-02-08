@@ -1,45 +1,53 @@
 #include "myfunc.h"
 
-/* get satellite position , velocity and DOPP
+
+const static double gpst0[]={1980,1, 6,0,0,0}; /* gps time reference */
+
+/* compute satellite position by Ephemeris
  * 
  * args   : time_t time        I   second of week (s)
- *          eph_t   *eph       I   broadcast ephemeris
- *          double *usrpos     I   user position {lat,lon,high} (rad | m)
- *          double *rs         O   sat position and velocity (ecef)
- *                                 {x,y,z,vx,vy,vz} (m|m/s)
- *          double *dopp       O   satellite DOPP (Hz)
+ *          eph_t  *eph        I   broadcast ephemeris
+ *          double *rs         O  sat position (ecef) and velocity {x,y,z, vx,vy,vz} (m | m/s)
  * 
  * return : none
  * *************************************************/
-void satellite_pos_vel_dopp(time_t time, const eph_t *eph, const double *usrpos, double *rs, double *dopp)
+void satEph_calc_satPos(time_t time, const eph_t *eph, double *rs)
 {
-	STU_COOR_XYZ sat_vel, sat_pos, xyz;
 	int i;
-	double rst[3],tt=1E-3;
-//	double dtst[1];
+	double rst[3],tt=1E-3, toe;
 
-	eph2pos(time, eph, rs);
+	toe=adjweek(gpst2time(eph->week, eph->toes));//, eph->toc);
+
+	eph2pos(time, eph, toe, rs);
 	time=timeadd(time,tt);
-	eph2pos(time,eph,rst);
+	eph2pos(time,eph, toe, rst);
 	
 	
 	/* satellite velocity by differential approx */
     for (i=0;i<3;i++) rs[i+3]=(rst[i]-rs[i])/tt;
-	
-	sat_vel.tX = rs[3];
-	sat_vel.tY = rs[4];
-	sat_vel.tZ = rs[5];
-	
-	sat_pos.tX = rs[0];
-	sat_pos.tY = rs[1];
-	sat_pos.tZ = rs[2];
-	
-	/* longitude latitude elevation  2  xyz */
-	pos2ecef(usrpos, (double *) &xyz);
-	/* calc DOPP */
-	*dopp = calc_doppler_based_pv((PSTU_COOR_XYZ) &sat_vel, (PSTU_COOR_XYZ) &sat_pos, (PSTU_COOR_XYZ)&xyz);
 }
 
+
+/* compute satellite position by Almanac
+ * 
+ * args   : time_t time        I   second of week (s)
+ *          alm_t  *alm        I   almanac
+ *          double *rs         O   sat position (ecef) and velocity {x,y,z, vx,vy,vz} (m | m/s)
+ * 
+ * return : none
+ * *************************************************/
+void satAlm_calc_satPos(time_t time, const alm_t *alm, double *rs)
+{
+	int i;
+	double rst[3],tt=1E-3;
+	alm2pos(time, alm, rs);
+	time = timeadd(time,tt);
+	alm2pos(time, alm, rst);
+	
+	/* satellite velocity by differential approx */
+    for (i=0;i<3;i++) rs[i+3]=(rst[i]-rs[i])/tt;
+	
+}
 
 
 double calc_doppler_based_pv(const PSTU_COOR_XYZ satVel, const PSTU_COOR_XYZ satPos, const PSTU_COOR_XYZ usrPos)
@@ -69,6 +77,52 @@ double calc_doppler_based_pv(const PSTU_COOR_XYZ satVel, const PSTU_COOR_XYZ sat
 }
 
 
+/* convert calendar day/time to time -------------------------------------------
+* convert calendar day/time to gtime_t struct
+* args   : double *ep       I   day/time {year,month,day,hour,min,sec}
+* return : gtime_t struct
+* notes  : proper in 1970-2037 or 1970-2099 (64bit time_t)
+*-----------------------------------------------------------------------------*/
+time_t epoch2time(const double *ep)
+{
+    const int doy[]={1,32,60,91,121,152,182,213,244,274,305,335};
+    time_t time=0;
+    int days,year=(int)ep[0],mon=(int)ep[1],day=(int)ep[2];
+    
+    if (year<1970||2099<year||mon<1||12<mon) return time;
+    
+    /* leap year if year%4==0 in 1901-2099 */
+    days=(year-1970)*365+(year-1969)/4+doy[mon-1]+day-2+(year%4==0&&mon>=3?1:0);
+
+    time = (time_t)days*86400+(int)ep[3]*3600+(int)ep[4]*60  + ep[5];
+    return time;
+}
+
+
+/* gps time to time ------------------------------------------------------------
+* convert week and tow in gps time to gtime_t struct
+* args   : int    week      I   week number in gps time
+*          double sec       I   time of week in gps time (s)
+* return : gtime_t struct
+*-----------------------------------------------------------------------------*/
+time_t gpst2time(int week, double sec)
+{
+    time_t t=epoch2time(gpst0);
+    
+    if (sec<-1E9||1E9<sec) 
+		sec=0.0;
+    t += 86400*7*week + sec;
+
+    return t;
+}
+
+/* adjust time considering week handover -------------------------------------*/
+time_t adjweek(time_t t)//, time_t t0)
+{
+//    return timediff(t,t0);
+    return fmod(t, 604800);
+}
+
 double cal_range_3dim(const PSTU_COOR_XYZ Pos1, const PSTU_COOR_XYZ Pos2)
 {
 	return sqrt(pow((Pos1->tX - Pos2->tX), 2) + pow((Pos1->tY - Pos2->tY), 2) + pow((Pos1->tZ - Pos2->tZ), 2));
@@ -92,7 +146,7 @@ double timeadd(time_t t, double sec)
     return tmp;
 }
 
-void eph2pos(time_t time, const eph_t *eph, double *rs)
+void eph2pos(time_t time, const eph_t *eph, double toe, double *rs)
 {
     double tk,M,E,Ek,sinE,cosE,u,r,i,O,sin2u,cos2u,x,y,sinO,cosO,cosi,mu,omge;
     double xg,yg,zg,sino,coso;
@@ -104,7 +158,7 @@ void eph2pos(time_t time, const eph_t *eph, double *rs)
         rs[0]=rs[1]=rs[2]=0.0;
         return;
     }
-    tk=timediff(time,eph->toe);
+    tk=timediff(time, toe);
     
     switch ((sys=satsys(eph->sat,&prn))) {
         case SYS_GAL: mu=MU_GAL; omge=OMGE_GAL; break;
@@ -336,23 +390,74 @@ double satazel(const double *pos, const double *e, double *azel)
 }
 
 
+/* almanac to satellite position and clock bias --------------------------------
+* compute satellite position and clock bias with almanac (gps, galileo, qzss)
+* args   : gtime_t time     I   time (gpst)
+*          alm_t *alm       I   almanac
+*          double *rs       O   satellite position (ecef) {x,y,z} (m)
+* return : none
+* notes  : see ref [1],[7],[8]
+*-----------------------------------------------------------------------------*/
+void alm2pos(time_t time, const alm_t *alm, double *rs)
+{
+    double tk,M,E,Ek,sinE,cosE,u,r,i,O,x,y,sinO,cosO,cosi,mu;
+    
+//    trace(4,"alm2pos : time=%s sat=%2d\n",time_str(time,3),alm->sat);
+    
+    tk=timediff(time, alm->toa);
+    
+    if (alm->A<=0.0) {
+        rs[0]=rs[1]=rs[2]=0.0;
+        return;
+    }
+    mu=satsys(alm->sat,NULL)==SYS_GAL?MU_GAL:MU_GPS;
+    
+    M=alm->M0+sqrt(mu/(alm->A*alm->A*alm->A))*tk;
+    for (E=M,sinE=Ek=0.0;fabs(E-Ek)>1E-12;) {
+        Ek=E; sinE=sin(Ek); E=M+alm->e*sinE;
+    }
+    cosE=cos(E);
+    u=atan2(sqrt(1.0-alm->e*alm->e)*sinE,cosE-alm->e)+alm->omg;
+    r=alm->A*(1.0-alm->e*cosE);
+    i=alm->i0;
+    O=alm->OMG0+(alm->OMGd-OMGE)*tk-OMGE*alm->toas;
+    x=r*cos(u); y=r*sin(u); sinO=sin(O); cosO=cos(O); cosi=cos(i);
+    rs[0]=x*cosO-y*cosi*sinO;
+    rs[1]=x*sinO+y*cosi*cosO;
+    rs[2]=y*sin(i);
+
+}
+
+
 /* satellite azimuth/elevation angle -------------------------------------------
-* compute satellite elevation angle
-* args   : double *usrpos   I   user position, geodetic position {lat,lon,h} (rad,m)
-*          double *satpos   I   satellite position, 
+* compute satellite elevation angle and DOPP
+* args   : double *usrpos   I   user position, geodetic position {lat,lon,h} (degree,m)
+*          double *rs       I   satellite position, velocity {x,y,z, vx,vy,vz} (m, m/s)
+*          double *dopp     IO  satellite DOPP (Hz)
 * 
 * return : elevation angle (rad)  -pi/2<= el <=pi/2  is right
+* note :  user position unit  is  degree , elevation unit  is  rad
 * ----------------------------------------------*/
-double satellite_elevation(const double *usrpos, const double* satpos)
+double satellite_elevation_dopp(const double *usrpos, const double* rs, double *dopp)
 {
-	double e[3], rr[3], azel[2], r;
+	double e[3], usrxyz[3], azel[2], r;
 	
-	pos2ecef(usrpos, rr);
+	double pos[3];
+	pos[0] = usrpos[0] * PI / 180;
+	pos[1] = usrpos[1] * PI / 180;
+	pos[2] = usrpos[2];
+
+	
+	pos2ecef(pos, usrxyz);
+	
+
+	/* calc DOPP */
+	*dopp = calc_doppler_based_pv((PSTU_COOR_XYZ) &rs[3], (PSTU_COOR_XYZ) &rs[0], (PSTU_COOR_XYZ)&usrxyz);
 	
 	/* geometric distance/azimuth/elevation angle */
-	if ((r=geodist(satpos, rr, e))<=0.0)
+	if ((r=geodist(rs, usrxyz, e))<=0.0)
 		return PI;
-    return satazel(usrpos, e, azel);
+    return satazel(pos, e, azel);
 }
 
 
